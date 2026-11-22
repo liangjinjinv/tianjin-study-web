@@ -60,11 +60,12 @@
   }
   function archive(c){
     const groups=[['','全部'],['knowledge','知识点'],['practice','练习题'],['wrong','错题']];
+    const selected=groups.some(([v])=>v===c.params?.kind)?c.params.kind:'';
     return '<section class="panel si-archive"><div class="si-archive-top"><div><h2>我的资料</h2><p class="muted">按科目找资料，记录只保存在当前浏览器。</p></div>'+
       '<label>按科目筛选<select data-si-archive-subject>'+option(c,'','全科')+subjects(c).map(s=>option(c,s,s)).join('')+'</select></label></div>'+
-      '<div class="si-filters" role="group" aria-label="资料类型">'+groups.map(([v,label])=>'<button class="btn" type="button" data-si-archive-kind="'+v+'" aria-pressed="'+(!v)+'">'+label+'</button>').join('')+'</div>'+
+      '<div class="si-filters" role="group" aria-label="资料类型">'+groups.map(([v,label])=>'<button class="btn" type="button" data-si-archive-kind="'+v+'" aria-pressed="'+(v===selected)+'">'+label+'</button>').join('')+'</div>'+
       '<label class="si-search">搜索我的资料<input type="search" data-si-archive-search placeholder="搜标题、科目、章节或内容"></label>' +
-      '<div data-si-archive-list>'+archiveList(c)+'</div></section>';
+      '<div data-si-archive-list>'+archiveList(c,{kind:selected})+'</div></section>';
   }
   function archiveList(c,args={}){
     const terms=(args.search||'').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);

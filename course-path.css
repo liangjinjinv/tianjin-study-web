@@ -5,9 +5,9 @@
 .tjp-resume small,.tjp-resume strong{display:block}.tjp-resume small{color:var(--muted);font-size:.875rem}
 .tjp-marker,.tjp-chapter-num{background:#f9d9e8;color:#862851;border-radius:12px;display:grid;place-items:center;font-weight:750;width:2.3rem;height:2.3rem}
 .tjp-title-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.tjp-subjects,.tjp-switch,.tjp-crumb{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
-.tjp-subjects .btn,.tjp-switch .btn{min-height:44px;color:var(--ink);background:#fffdfd;font-weight:700}
-.tjp-subjects .btn[aria-current=true],.tjp-switch .btn[aria-current=page]{background:#f5d8e5;border-color:#d08cab;color:#68243f}
+.tjp-subjects,.tjp-crumb{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+.tjp-subjects .btn{min-height:44px;color:var(--ink);background:#fffdfd;font-weight:700}
+.tjp-subjects .btn[aria-current=true]{background:#f5d8e5;border-color:#d08cab;color:#68243f}
 .tjp-subjects .btn span{color:#98335e;min-width:1.12rem;text-align:center}.tjp-crumb>span{font-size:.92rem;color:var(--muted)}
 .tjp-chapter{margin:.7rem 0;padding:0 !important}
 .tjp-chapter summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:.7rem;align-items:center;padding:.8rem 1rem;font-weight:750;cursor:pointer;list-style:none;border-radius:16px}
@@ -19,3 +19,19 @@
 .tjp-footnote{margin-top:1rem;font-size:.9rem}.tjp-sample,.tjp-empty,.tjp-review{padding:clamp(1rem,3vw,1.45rem)}.tjp-sample details{background:#fff5f9;border:1px solid #f2dce7;border-radius:12px;margin: .7rem 0 1rem;padding:.7rem .85rem}.tjp-sample details summary{font-weight:700;cursor:pointer}.tjp-sample details p{margin:.55rem 0 0}.tjp-diagram{display:block;width:min(100%,36rem);height:auto;margin:.65rem 0}
 .tjp-empty{background:#fffaff;border:1px dashed #e3bed0;border-radius:16px}.tjp-empty p{margin:.35rem 0 0;color:var(--muted)}.tjp-review{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 @media(max-width:480px){.tjp-intro{align-items:flex-start;flex-wrap:wrap}.tjp-intro-lesson>.btn{min-height:44px}.tjp-resume{grid-template-columns:auto 1fr}.tjp-resume>.btn{grid-column:2;justify-self:start}.tjp-chapter summary{gap:.55rem;padding:.75rem .65rem}.tjp-chapter ol{padding-inline:.65rem}.tjp-node{grid-template-columns:1.35rem minmax(0,1fr);gap:.45rem}.tjp-node small{grid-column:2;justify-self:start}.tjp-crumb>span{font-size:.875rem}}
+
+/* The knowledge and exercise panes share a lesson, never replace one another. */
+.tjp-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(1rem,2.6vw,1.65rem);align-items:start}
+.tjp-column{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;align-content:start;min-width:0}
+.tjp-column-header{display:flex;align-items:center;gap:.7rem;border-radius:14px;padding:.8rem .85rem;background:#f9e2ed;border:1px solid #edcede}
+.tjp-column-header>div{min-width:0}.tjp-column-header h2{font-size:1.27rem;line-height:1.2;margin:0 0 .2rem;scroll-margin-top:.8rem}.tjp-column-header h2:focus-visible{outline:2px solid #98335e;outline-offset:3px;border-radius:3px}.tjp-column-header p{margin:0;font-size:.9rem;color:var(--muted)}.tjp-column-header .tjp-marker{flex:0 0 2.3rem;background:#fff7fb}
+.tjp-questions .tjp-column-header{background:#f5e7f3;border-color:#e8d1e6}.tjp-questions .tjp-column-header .tjp-marker{color:#6f356f}
+.tjp-jumps{display:none;gap:.5rem;flex-wrap:wrap}.tjp-jumps .btn{min-height:44px}
+.tjp-empty .btn{margin-top:.75rem}
+.tjp-exercise:has([data-course-exercise]){padding:0;border:0;background:transparent;box-shadow:none}
+.tjp-exercise:has([data-course-exercise])>.eyebrow{margin:0 0 .5rem}
+.tjp-exercise .qp-question{min-width:0}.tjp-exercise .qp-question h2{font-size:clamp(1.1rem,2.4vw,1.42rem)}.tjp-exercise .qp-image{max-width:100%}
+@media(max-width:900px){.tjp-columns{grid-template-columns:minmax(0,1fr)}.tjp-jumps{display:flex}}
+.tjp-review-link,.tjp-reset-exercise{margin:.45rem 0 .65rem}.tjp-exercise .qp-reference:focus-visible{outline:2px solid #98335e;outline-offset:3px}
+
+.tjp-jumps.tjp-situation{display:flex}

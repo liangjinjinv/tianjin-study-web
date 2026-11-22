@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const S = { key: '', subject: '', topic: '', origin: '', mode: '', id: '', phase: '', draft: '', correct: false, note: '', tab: 'due', flash: '', savedQuestion: '' };
+  const S = { key: '', subject: '', topic: '', origin: '', mode: '', id: '', phase: '', draft: '', correct: false, note: '', tab: 'due', flash: '' };
   let writing = false;
   const qBank = c => [...(c.content.questions || []), ...(c.state.uploads || [])];
   const topics = c => [...new Set(qBank(c).filter(q => !S.subject || q.subject === S.subject).map(q => q.topic))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
@@ -41,7 +41,7 @@
   }
   const sourceName = q => q.source==='private'?'本机私题':q.source==='recall'?'背诵复习':q.source==='knowledge'?'知识点回想':'原创示例题';
   const statCards = (c,stats,cls='') => '<section class="qp-stats '+cls+'" aria-label="统计">'+stats.map(([label,value])=>'<div class="panel"><span class="muted">'+e(c,label)+'</span><strong>'+e(c,value)+'</strong></div>').join('')+'</section>';
-  function question(c,q,r,position="") {
+  function question(c,q,r,position="",inline=false) {
     const review = !!r, auto = mcq(q);
     const result = S.phase==='done';
     const reveal = result || S.phase==='revealed';
@@ -53,10 +53,10 @@
     const answers = auto ? '<fieldset class="qp-choices"><legend>选择你的答案</legend>'+q.options.map((s,i)=>'<label><input type="radio" name="choice" value="'+i+'" '+(String(i)===S.draft?'checked':'')+' '+(reveal?'disabled':'')+'><span class="qp-letter">'+String.fromCharCode(65+i)+'</span><span>'+e(c,s)+'</span></label>').join('')+'</fieldset>' : '<label class="qp-answer-label">写下你的答案或解题思路<textarea name="written" rows="3" maxlength="1500" '+(reveal?'readonly':'')+' placeholder="先独立作答；不会也可以写下卡在哪里。">'+e(c,S.draft)+'</textarea></label>';
     const ref = q.answer || (auto ? q.options[q.correct] : '') || (revealedPhoto?'对照这张照片回想：':'');
     return '<article class="panel qp-question"><div class="qp-tags"><span>'+e(c,q.subject)+'</span><span>'+e(c,auto?'单选题':'对照自评')+'</span>'+(!review?'<span class="qp-gold">首答对 +5 ✨</span>':'<span>'+e(c,r.mastered?'已掌握':due(c,r)?'今日到期':'待复习')+'</span>')+'</div><p class="qp-meta muted">来源：'+e(c,sourceName(q))+' · 知识点：'+e(c,q.topic||'综合')+(position?' · '+e(c,position):'')+(review?' · '+e(c,r.mastered?'已掌握':'下次复习 '+r.due):'')+'</p><h2>'+e(c,q.prompt||'看图作答')+'</h2>'+image+original+
-      (S.savedQuestion===q.id?'<p class="muted" role="status">已存进我的题库，可以直接开始练习。</p>':'')+'<form id="qp-do">'+answers+(!reveal?'<div class="qp-actions"><button class="btn primary" type="submit">'+(auto?'提交答案':'提交并对照')+'</button></div>':'')+'</form>'+
+      '<form id="qp-do">'+answers+(!reveal?'<div class="qp-actions"><button class="btn primary" type="submit">'+(auto?'提交答案':'提交并对照')+'</button></div>':'')+'</form>'+
       (reveal?'<div class="qp-reference" aria-live="polite">'+(result?'<strong>'+(S.correct?'本次答对':'还需要再练')+'</strong>':'<strong>对照作答要点</strong>')+'<div>'+paras(c,ref||'这道私题未填写参考答案，请对照已核实的原卷或老师反馈再自评。')+revealedPhoto+'</div>'+(q.explain?paras(c,q.explain):'')+'</div>':'')+
       (S.phase==='revealed'? '<div class="qp-actions"><button class="btn primary" type="button" data-qp-grade="yes">独立做对</button><button class="btn" type="button" data-qp-grade="no">不完整 / 还不会</button></div>':'')+
-      (result ? '<p class="muted">'+e(c,S.note)+'</p><div class="qp-actions"><button class="btn primary" type="button" id="qp-next">'+(review?'下一道复习题':'下一题')+'</button></div>':'')+
+      (result ? '<p class="muted">'+e(c,S.note)+'</p><div class="qp-actions"><button class="btn primary" type="button" id="qp-next">'+(inline?'再做一次':review?'下一道复习题':'下一题')+'</button></div>':'')+
       (r && q.source!=='knowledge' ? '<form id="qp-memo" class="qp-memo"><label>错因<input name="reason" maxlength="250" value="'+e(c,r.reason)+'" placeholder="比如：漏看题目条件"></label><label>原卷失分（选填）<input type="number" name="lost" min="0" max="800" step="0.5" value="'+e(c,r.lost)+'"></label><button class="btn" type="submit">保存错因</button><small aria-live="polite" id="qp-memo-note"></small></form>' : '')+
       '</article>';
   }
@@ -69,8 +69,8 @@
     if(selected?.id!==S.id) reset(selected?.id||'');
     const mode=(id,title,icon)=>'<button class="btn '+(S.mode===id?'primary':'')+'" type="button" data-qp-mode="'+id+'" aria-pressed="'+(S.mode===id)+'"><span aria-hidden="true">'+icon+'</span>'+title+'</button>';
     const filters='<details class="qp-filter" '+(S.topic||S.origin?'open':'')+'><summary>按专题、来源或题号选择</summary><div class="qp-controls"><label>专题<select id="qp-topic">'+label(c,'','全部专题',S.topic)+topics(c).map(t=>label(c,t,t,S.topic)).join('')+'</select></label><label>来源<select id="qp-source">'+label(c,'','全部来源',S.origin)+label(c,'built','原创练习',S.origin)+label(c,'private','本机私题',S.origin)+'</select></label>'+(selected?'<label>切换题目<select id="qp-id">'+list.map(q=>label(c,q.id,String(q.prompt||'看图作答').slice(0,40),selected.id)).join('')+'</select></label>':'')+'</div></details>';
-    return '<header class="hero qp-hero"><h1>🎯 练题演练场</h1><p class="muted">自动判卷 · 首答正确加星光 · 答错自动归入错题本。题库由原创示例及本机私题组成。</p></header><div class="qp-mode" role="group" aria-label="判题方式">'+mode('auto','自动判卷题','📝')+mode('self','对照自评题','📖')+'</div>'+stats+subjectChips(c)+filters+
-      (selected?question(c,selected,null,'第 '+(list.indexOf(selected)+1)+' / '+list.length+' 题'):'<section class="panel"><h2>没有符合筛选的题</h2><p class="muted">试试切到另一种判题方式，或加入自己的题。</p><button class="btn primary" id="qp-upload" type="button">录入私题</button></section>');
+    return '<header class="hero qp-hero"><h1>🎯 练题演练场</h1><p class="muted">跨章节集中练习：按科目和专题挑题。这里和课本小节共用题目与答题记录，答错自动记入错题本。</p></header><div class="qp-mode" role="group" aria-label="判题方式">'+mode('auto','自动判卷题','📝')+mode('self','对照自评题','📖')+'</div>'+stats+subjectChips(c)+filters+
+      (selected?question(c,selected,null,'第 '+(list.indexOf(selected)+1)+' / '+list.length+' 题'):'<section class="panel"><h2>没有符合筛选的题</h2><p class="muted">试试切到另一种判题方式，或加入自己的题。</p>'+(window.StudyIntake?.button(c,{label:'＋ 添加练习题',kind:'practice',subject:S.subject})||'<a class="btn" href="#resources">去资料库添加</a>')+'</section>');
   }
   function renderReview(c) {
     const all=records(c), queue=reviews(c), target=queue.find(r=>r.question.id===S.id)||queue[0];
@@ -81,9 +81,6 @@
     const stats=statCards(c,[['复习记录',all.length],['今日到期',all.filter(r=>due(c,r)).length],['已掌握',all.filter(r=>r.mastered).length],['已记录原卷失分',graded.length?graded.reduce((sum,r)=>sum+r.lost,0)+' 分':'未记录']],'qp-review-stats');
     return '<header class="hero qp-hero"><h1>📝 错题本</h1><p class="muted">先独立重做或回想，再对照答案。到期复习会更新下次日期。</p>'+window.StudyIntake.button(c,{subject:S.subject,kind:'wrong',label:'＋ 录纸质错题'})+'</header>'+stats+'<div class="qp-pills" aria-label="复习范围"><button class="btn '+(S.tab==='due'?'primary':'')+'" type="button" data-qp-tab="due" aria-pressed="'+(S.tab==='due')+'">今日到期</button><button class="btn '+(S.tab==='all'?'primary':'')+'" type="button" data-qp-tab="all" aria-pressed="'+(S.tab==='all')+'">全部记录</button></div>'+subjectChips(c)+
       (target?'<details class="qp-filter"><summary>选择复习内容（'+queue.length+' 道）</summary><div class="qp-controls"><label>切换复习内容<select id="qp-id">'+queue.map(r=>label(c,r.question.id,r.question.subject+' · '+String(r.question.prompt).slice(0,44),S.id)).join('')+'</select></label></div></details>'+question(c,liveReviewQuestion(c,target),target,'第 '+(queue.indexOf(target)+1)+' / '+queue.length+' 题')+otherCards:'<section class="panel"><h2>'+(S.tab==='due'?'没有到期复习':'还没有复习记录')+'</h2><p class="muted">做错的题会自动加入；新错题从次日开始间隔复习，也可在「全部记录」提前练习。</p><button class="btn primary" id="qp-practice" type="button">去练题</button></section>');
-  }
-  function renderUpload(c) {
-    return '<header class="hero qp-hero"><span class="eyebrow">题库 · 本机保存</span><h1>录入我的题</h1><p>手动录题或添加一张题图，自选科目和专题。内容只存在此浏览器，不会传到服务器。</p></header><section class="panel"><form id="qp-upload-form" class="qp-form"><div class="qp-controls"><label>科目<select name="subject" required>'+label(c,'','请选择科目','')+dept(c).map(s=>label(c,s,s,'')).join('')+'</select></label><label>专题<input name="topic" maxlength="35" placeholder="例如：等高线地形图"></label><label>判题方式<select name="type"><option value="self">主观题 / 对照自评</option><option value="auto">选择题 / 自动判题</option></select></label></div><label>题干<textarea name="prompt" maxlength="1500" rows="3" placeholder="可填写题干、或只添加一张题图"></textarea></label><label>题图（选填）<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="muted">请先裁掉姓名、学校等身份信息。支持 JPG、PNG、WebP，每次一张，不超过 12 MB。</p><fieldset id="qp-upload-options" hidden disabled><legend>填写两个及以上选项，选定正确项</legend>'+['A','B','C','D'].map((v,i)=>'<label>选项 '+v+'<input maxlength="300" name="opt'+i+'"></label>').join('')+'<label>正确选项<select name="correct" required><option value="">请选择</option>'+['A','B','C','D'].map((v,i)=>label(c,String(i),v,null)).join('')+'</select></label></fieldset><label>参考答案 / 答题要点（自评可留空）<textarea name="answer" maxlength="1500" rows="2"></textarea></label><label>解析或来源备注（选填）<textarea name="explain" maxlength="1500" rows="2"></textarea></label><p class="qp-error" aria-live="polite" id="qp-upload-error"></p><div class="qp-actions"><button class="btn primary" type="submit">保存题目</button><button class="btn" id="qp-practice" type="button">去练题</button></div></form></section>';
   }
   async function save(c) { try { return (await c.save()) !== false; } catch { return false; } }
   async function addRecallToReview(c,q,{reason='默写未掌握',original=q?.response||'未完整默写'}={}) {
@@ -166,53 +163,13 @@
       return data;
     } finally {URL.revokeObjectURL(url);}
   }
-  function bindUpload(c,find) {
-    const form=find('#qp-upload-form');
-    const toggle=()=>{const gate=find('#qp-upload-options'), self=form.elements.type.value!=='auto';gate.hidden=self; gate.disabled=self;};
-    form.elements.type.addEventListener('change',toggle); toggle();
-    form.addEventListener('submit',async ev=>{
-      ev.preventDefault();const d=new FormData(form), submit=form.querySelector('[type=submit]'), error=find('#qp-upload-error');
-      if(submit.disabled || writing) return;
-      const val=k=>String(d.get(k)||'').trim();
-      const subject=val('subject'), prompt=val('prompt');
-      submit.disabled=true;error.textContent='';
-      try {
-        if(!dept(c).includes(subject)) throw Error('请选择科目。');
-        let q={id:'mine-'+(globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2)),subject,topic:val('topic')||'自选练习',prompt,answer:val('answer'),explain:val('explain'),source:'private'};
-        if(val('type')==='auto') {
-          const opts=Array.from({length:4},(_,i)=>val('opt'+i));
-          const nonEmpty=opts.map((s,i)=>({s,i})).filter(v=>v.s), idx=nonEmpty.findIndex(o=>String(o.i)===val('correct'));
-          if(nonEmpty.length<2||idx<0||new Set(nonEmpty.map(o=>o.s)).size!==nonEmpty.length) throw Error('请填写至少两个不同的选项，并选中已填写的正确选项。');
-          q.options=nonEmpty.map(o=>o.s); q.correct=idx; if(!q.answer)q.answer=q.options[idx];
-        }
-        q.image=await picture(d.get('image'));
-        if(!form.isConnected) return;
-        if(!q.prompt&&!q.image) throw Error('请填写题干或添加题图。');
-        if(writing) throw Error('上一项还在保存，请稍后重试。');
-        const list=(c.state.uploads ||= []);
-        writing=true;
-        try {
-          list.push(q);
-          if(!(await save(c))) {
-            const i=list.indexOf(q);
-            if(i!==-1)list.splice(i,1);
-            throw Error('这道题尚未保存，填写的内容还在。请重试，或裁剪图片后再保存。');
-          }
-          if(form.isConnected) {S.savedQuestion=q.id;c.go('practice',{subject:q.subject,topic:q.topic,id:q.id});}
-        } finally {writing=false;}
-      } catch(err) {if(form.isConnected)error.textContent=err.message||'图片读取失败，请换一张试试。';}
-      finally {submit.disabled=false;}
-    });
-  }
   function renderPractice(c) {
     route(c);
-    return page(c)==='review'?renderReview(c):page(c)==='upload'?renderUpload(c):renderBank(c);
+    return page(c)==='review'?renderReview(c):renderBank(c);
   }
   function bindPractice(c) {
     const find=q=>c.root.querySelector(q);
     find('#qp-practice')?.addEventListener('click',()=>c.go('practice'));
-    find('#qp-upload')?.addEventListener('click',()=>c.go('upload'));
-    if(page(c)==='upload') {bindUpload(c,find);return;}
     for(const [id,field] of Object.entries({sub:'subject',topic:'topic',source:'origin',mode:'mode',id:'id'})) {
       find('#qp-'+id)?.addEventListener('change',ev=>{ S[field]=ev.target.value; if(field==='subject') S.topic=''; reset(field==='id'?S.id:'');c.render();});
     }
@@ -223,7 +180,7 @@
     const isReview=page(c)==='review', list=isReview?reviews(c).map(r=>liveReviewQuestion(c,r)):eligible(c);
     const q=list.find(q=>q.id===S.id), r=isReview?c.state.review?.[S.id]:null;
     if (!q) return;
-    find('#qp-next')?.addEventListener('click',()=>{
+    bindQuestionControls(c,c.root,q,r,()=>{
       const i=list.findIndex(v=>v.id===q.id);
       if(isReview && S.tab==='due') {
         const next=list.slice(i+1).concat(list.slice(0,i)).find(v=>due(c,c.state.review[v.id]));
@@ -231,6 +188,10 @@
       } else reset(list[(i+1)%list.length]?.id||'');
       c.render();
     });
+  }
+  function bindQuestionControls(c,host,q,r,next){
+    const find=q=>host.querySelector(q);
+    find('#qp-next')?.addEventListener('click',next);
     find('#qp-do')?.addEventListener('submit',ev=>{
       ev.preventDefault(); if(S.phase || writing) return;
       const form=ev.currentTarget, el=form.elements.namedItem(mcq(q)?'choice':'written');
@@ -245,7 +206,7 @@
       if(mcq(q)) finish(c,q,Number(value)===q.correct,r,form.closest('article'));
       else {S.phase='revealed';c.render();}
     });
-    c.root.querySelectorAll('[data-qp-grade]').forEach(b=>b.addEventListener('click',()=>{if(S.phase==='revealed')finish(c,q,b.dataset.qpGrade==='yes',r,b.closest('article'));}));
+    host.querySelectorAll('[data-qp-grade]').forEach(b=>b.addEventListener('click',()=>{if(S.phase==='revealed')finish(c,q,b.dataset.qpGrade==='yes',r,b.closest('article'));}));
     find('#qp-memo')?.addEventListener('submit',async ev=>{
       ev.preventDefault();if(writing)return;
       const form=ev.currentTarget, button=form.querySelector('[type=submit]'), status=form.querySelector('#qp-memo-note');
@@ -259,5 +220,17 @@
       } finally {writing=false;button.disabled=false;}
     });
   }
-  Object.assign(window,{renderPractice,bindPractice,addRecallToReview,studyQuestionPhoto:picture});
+  function renderSectionQuestion(c,id){
+    const q=qBank(c).find(q=>q.id===id&&q.section===c.params?.section);
+    if(!q)return '';
+    const key='study:'+c.params.section+':'+id;
+    if(S.key!==key){S.key=key;reset(id);}
+    return question(c,q,null,'',true);
+  }
+  function bindSectionQuestion(c,id){
+    const q=qBank(c).find(q=>q.id===id&&q.section===c.params?.section);
+    const host=c.root.matches?.('[data-course-exercise]')?c.root:c.root.querySelector('[data-course-exercise]');
+    if(q&&host&&S.id===id)bindQuestionControls(c,host,q,null,()=>{reset(id);c.render();});
+  }
+  Object.assign(window,{renderPractice,bindPractice,renderSectionQuestion,bindSectionQuestion,addRecallToReview,studyQuestionPhoto:picture});
 })();

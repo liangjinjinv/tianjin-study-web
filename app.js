@@ -4,7 +4,7 @@ const content=window.CURRICULUM,root=document.getElementById('main'),nav=documen
 const key='tianjin-study-compass-v1';
 const catalog=window.StudyCatalog;
 for(const id of Object.keys(catalog?.samples||{})){const q=catalog.sampleQuestion(id);if(q&&!content.questions.some(x=>x.id===q.id))content.questions.push(q);}
-const pages=[['home','🏠','首页'],['study','▤','课本闯关'],['practice','🎯','演练场'],['review','📝','错题本'],['upload','＋','我的题库'],['poems','📜','古诗文'],['guide','✎','阅读技巧'],['english','🎧','英语跟读'],['resources','🗂','全科资料库'],['profile','📊','学情画像']];
+const pages=[['home','🏠','首页'],['study','▤','课本闯关'],['practice','🎯','演练场'],['review','📝','今日复习'],['poems','📜','古诗文'],['guide','✎','阅读技巧'],['english','🎧','英语跟读'],['resources','🗂','全科资料库'],['profile','📊','学情画像']];
 const all=new Set(pages.map(x=>x[0]).concat('settings','subjects','subject'));
 const fmt=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'Asia/Shanghai'});
 const day=(offset=0)=>{const now=fmt.formatToParts().reduce((o,p)=>(o[p.type]=p.value,o),{});return new Date(Date.UTC(+now.year,+now.month-1,+now.day+offset)).toISOString().slice(0,10)};
@@ -37,7 +37,15 @@ async function save(){
  try{const ok=await disk.save(state);if(!ok)tell(disk.error||'没能存好，请保留当前页面并重试。');return ok;}
  finally{root.inert=lock;}
 }
-function route(){const raw=location.hash.slice(1),[page,query]=raw.split('?');state.page=all.has(page)?page:'home';params=Object.fromEntries(new URLSearchParams(query||''));}
+function route(){
+ const [page,query]=location.hash.slice(1).split('?');
+ params=Object.fromEntries(new URLSearchParams(query||''));
+ if(page==='upload'){
+  state.page='resources';params.kind='practice';const next=new URLSearchParams(params).toString();
+  history.replaceState(null,'','#resources?'+next);return;
+ }
+ state.page=all.has(page)?page:'home';
+}
 function go(page,p={}){const q=new URLSearchParams(p).toString(),n='#'+page+(q?'?'+q:'');if(location.hash===n){route();render();return}location.hash=n;}
 const count=date=>Math.round((Date.parse(date)-Date.parse(day()))/864e5);
 const line=(date)=>count(date)<0?'<strong>已过计划日</strong>':'<strong>'+count(date)+' <small>天</small></strong>';
@@ -58,11 +66,16 @@ function dash(){
  const done=marks(),today=content.subjects.filter(s=>s.name==='生物'||s.name==='地理').sort((a,b)=>a.name==='生物'?-1:1),total=today.length;
  const last=window.StudyCatalog?.byId(state.courseLast);
  const meta=window.SUBJECT_NOTEBOOK_META||{};
- return `<section class="panel nb-welcome nb-fan-card"><div class="nb-fan-copy"><h2>今天，往前学一小步</h2><p class="muted">天津初二 · 近期目标：生地双优秀</p></div><figure class="nb-fan-drawing"><span class="nb-fan-cheer">加油！</span>${window.FAN_DUO_ART||''}</figure></section>
- <section class="learn-start" aria-label="今天从这里开始">
-  <article class="learn-next"><div class="learn-kicker"><span class="learn-icon" aria-hidden="true">▤</span>跟课本学</div><h2>${last?'继续学习':'找到正在学的一节'}</h2><p>${last?esc(last.subject+' · '+last.title):'按八上课本目录找到学校正在讲的章节。'}</p><button class="btn primary" data-nav="study"${last?' data-section="'+esc(last.id)+'"':''}>${last?'继续学':'打开课本闯关'}</button></article>
-  <article class="learn-next learn-review"><div class="learn-kicker"><span class="learn-icon" aria-hidden="true">↻</span>今日复习</div><h2>${pending.length?'有 '+pending.length+' 项待复习':'今天没有到期复习'}</h2><p>${pending.length?'先自己想一遍，再对答案。':'做错的题会自动记下；纸质错题也能补录。'}</p><button class="btn" data-nav="review">${pending.length?'开始复习':'查看错题本'}</button></article>
+ return `<section class="study-today" aria-labelledby="study-today-title">
+  <div class="study-today-head"><div><p class="learn-kicker">今天怎么学</p><h2 id="study-today-title">先选你现在要做的事</h2></div>${last?`<a class="btn" href="#study?section=${encodeURIComponent(last.id)}">接着上次 · ${esc(last.title)}</a>`:''}</div>
+  <div class="learn-start">
+   <article class="learn-next"><div class="learn-kicker"><span class="learn-icon" aria-hidden="true">▤</span>上课前</div><h3>预习下一节</h3><p>选老师下一节要讲的课。先看左边的知识点，有题的话做一道看看懂没懂。</p><button class="btn primary" data-nav="study" data-intent="preview">选一节预习</button></article>
+   <article class="learn-next learn-after"><div class="learn-kicker"><span class="learn-icon" aria-hidden="true">✎</span>上完课</div><h3>练今天这一节</h3><p>选今天刚学的一节，先做右边的题。卡住了就在同一页回看左边。</p><button class="btn" data-nav="study" data-intent="practice">选一节练习</button></article>
+   <article class="learn-next learn-review"><div class="learn-kicker"><span class="learn-icon" aria-hidden="true">↻</span>隔几天再练</div><h3>${pending.length?'有 '+pending.length+' 项到期':'今天没有到期复习'}</h3><p>先重做，再看答案。站里做错的题会记进来，纸质作业的错题也能补录。</p><button class="btn${pending.length?' primary':''}" data-nav="review">${pending.length?'开始今日复习':'查看复习记录'}</button></article>
+  </div>
+  <div class="study-today-tools"><a href="#practice">跨章节找题（演练场）</a><a href="#resources">查资料、加笔记或错题</a></div>
  </section>
+ <section class="panel nb-welcome nb-fan-card"><div class="nb-fan-copy"><h2>今天，往前学一小步</h2><p class="muted">天津初二 · 近期目标：生地双优秀</p></div><figure class="nb-fan-drawing"><span class="nb-fan-cheer">加油！</span>${window.FAN_DUO_ART||''}</figure></section>
  <div class="split"><h2>✦ 今天先学：生地会考</h2><p class="nb-note">已打卡 ${today.filter(s=>done.includes('s-'+s.name)).length} / ${total} · 两小项，不用一天刷完所有科</p></div>
  <section class="nb-task-list" aria-label="今日生地任务">${today.map(subject=>{const name=subject.name,k='s-'+name,m=meta[name]||{};return `<article class="panel nb-task"><div class="nb-task-head"><div class="nb-task-icon" aria-hidden="true">${subjectIcons[name]||esc(subject.icon)}</div><div><div class="eyebrow">${esc(name)}</div><h3>${esc(m.title||subject.tip)}</h3></div><span class="nb-reward">+20 ✦</span></div><span class="pill">${esc(m.tag||'知识点 · 答题方法')}</span><p class="muted">${esc(m.description||subject.method)}</p><div class="actions">${name==='语文'?'<button class="btn primary" data-nav="poems">古诗文背诵</button><button class="btn" data-nav="guide">阅读技巧</button>':name==='英语'?'<button class="btn primary" data-nav="english">打开英语单元</button>':`<button class="btn primary" data-nav="subject" data-subject="${esc(name)}">展开速查</button><button class="btn" data-nav="practice" data-subject="${esc(name)}">去练习</button>`}<label class="nb-check"><input type="checkbox" data-task="${esc(k)}" ${done.includes(k)?'checked':''}> 打卡</label></div></article>`}).join('')}</section>
  <section class="section"><h2>跟上正在学的课</h2><p class="nb-note">根据学校进度挑一科；这里是专题，不是假定你们学校的章节目录。</p><div class="grid cols2">${content.subjects.filter(s=>!['生物','地理','化学'].includes(s.name)).map(s=>`<article class="panel"><h3>${subjectIcons[s.name]||''} ${esc(s.name)}</h3><p class="muted">${esc(meta[s.name]?.title||s.tip)}</p><button class="btn" data-nav="subject" data-subject="${esc(s.name)}">按这科的方法学</button></article>`).join('')}</div></section>`;
@@ -82,13 +95,16 @@ function bindSettings(){
 function render(){
  if(state.page!=='poems'&&state.page!=='english')window.cleanupReading?.();
  document.getElementById('notebook-top').innerHTML=top();
- const items=pages.slice(0,5).concat(content.subjects.map(s=>['subject',subjectIcons[s.name]||s.icon,s.name==='化学'?'化学预习':s.name,s.name]),pages.slice(5));
- nav.innerHTML=items.map(([id,icon,label,subject])=>`<a href="#${id}${subject?'?subject='+encodeURIComponent(subject):''}" ${state.page===id&&(!subject||params.subject===subject)?'aria-current="page"':''}><span aria-hidden="true">${esc(icon)}</span>${esc(label)}</a>`).join('');
+ const pinned=['home','study','review','resources'];
+ const topItems=pages.filter(x=>pinned.includes(x[0]));
+ const others=pages.filter(x=>!pinned.includes(x[0])).concat(content.subjects.map(s=>['subject',subjectIcons[s.name]||s.icon,s.name==='化学'?'化学预习':s.name,s.name]));
+ const navLink=([id,icon,label,subject])=>`<a href="#${id}${subject?'?subject='+encodeURIComponent(subject):''}" ${state.page===id&&(!subject||params.subject===subject)?'aria-current="page"':''}><span aria-hidden="true">${esc(icon)}</span>${esc(label)}</a>`;
+ nav.innerHTML=topItems.map(navLink).join('')+`<details class="study-more-nav" ${others.some(x=>x[0]===state.page)?'open':''}><summary>更多工具</summary>${others.map(navLink).join('')}</details>`;
  const c={state,save,render,esc,content,root,go,day,params,tell};
  c.addRecall=q=>window.addRecallToReview(c,q);
  const p=state.page;
  if(p==='home')root.innerHTML=dash();
- else if(['practice','review','upload'].includes(p)){root.innerHTML=window.renderPractice(c);window.bindPractice(c)}
+ else if(['practice','review'].includes(p)){root.innerHTML=window.renderPractice(c);window.bindPractice(c)}
  else if(p==='study'){root.innerHTML=window.renderCoursePath(c);window.bindCoursePath(c)}
  else if(p==='poems'){root.innerHTML=window.renderReading(c);window.bindReading(c)}
  else if(p==='english'){root.innerHTML=window.renderEnglishNotebook(c);window.bindEnglishNotebook(c)}
@@ -99,7 +115,7 @@ function render(){
  window.StudyIntake?.attach(c);
  if(storageIssue)root.insertAdjacentHTML('afterbegin','<p class="panel" role="alert">'+esc(storageIssue)+'</p>');
 }
-document.addEventListener('click',e=>{const b=e.target.closest?.('[data-nav]');if(!b)return;const dest=b.dataset.nav;if(!all.has(dest))return;const p={};for(const k of ['subject','id','section'])if(b.dataset[k])p[k]=b.dataset[k];go(dest,p)});
+document.addEventListener('click',e=>{const b=e.target.closest?.('[data-nav]');if(!b)return;const dest=b.dataset.nav;if(!all.has(dest))return;const p={};for(const k of ['subject','id','section','intent'])if(b.dataset[k])p[k]=b.dataset[k];go(dest,p)});
 root.addEventListener('change',async e=>{const b=e.target;if(!b.matches('[data-task]'))return;const d=day(),old=state.check[d]||[],a=new Set(old);b.checked?a.add(b.dataset.task):a.delete(b.dataset.task);state.check[d]=[...a];if(!await save())state.check[d]=old;render()});
 window.addEventListener('hashchange',()=>{route();render();window.scrollTo(0,0);root.focus({preventScroll:true});});
 disk.load().then(({raw,issue})=>{storageIssue=issue;if(raw)try{state=normalize(raw)}catch{storageIssue='本机记录读不出来，请不要清理旧数据。'}route();render()}).catch(()=>{storageIssue='当前浏览器打不开本机存储。';route();render()});
