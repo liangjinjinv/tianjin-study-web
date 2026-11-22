@@ -1,0 +1,25 @@
+.study-reading {display:grid;gap:1rem;min-width:0}
+.study-reading .reading-heading h1,.study-reading h2{margin:.25rem 0 .6rem}
+.study-reading .reading-content,.study-reading .reading-record {min-width:0}
+.study-reading [hidden]{display:none!important}
+.study-reading .reading-actions,.study-reading .reading-select {display:flex;align-items:center;flex-wrap:wrap;gap:.6rem .85rem}
+.study-reading .reading-actions label,.study-reading .reading-select label{font-size:.94rem}
+.study-reading .reading-actions input{accent-color:#a53666;vertical-align:middle}
+.study-reading .reading-select select {max-width:100%;padding:.45rem .75rem;border:1px solid #e9c8d9;border-radius:.65rem;background:#fff;color:#4c263c;font:inherit}
+.study-reading .reading-hint {padding:.65rem .85rem;border-left:3px solid #b64d7c;background:#fcf0f6;color:#673958;border-radius:.35rem}
+.study-reading .reading-vocab {padding:.6rem .85rem;margin:0 0 .85rem;background:#fff8fb;border:1px solid #efdce8;border-radius:.6rem}
+.study-reading .reading-vocab summary{cursor:pointer;font-weight:650}
+.study-reading .reading-lines {display:grid;gap:.55rem;padding-left:1.65rem}
+.study-reading .reading-line {padding:.7rem .8rem;background:#fff9fc;color:#5b3450;border:1px solid #efdce8;border-radius:.65rem}
+.study-reading .reading-line.is-speaking {background:#f8e1ed;border-color:#b64d7c}
+.study-reading .reading-source {display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.study-reading .reading-source p {line-height:1.85;margin:0}
+.study-reading .reading-source .btn {flex-shrink:0}
+.study-reading .reading-translation {margin:.5rem 0 0}
+.study-reading .reading-recall label,.study-reading .reading-recall textarea {display:block}
+.study-reading .reading-recall textarea {width:100%;box-sizing:border-box;padding:.55rem .65rem;margin:.35rem 0;border:1px solid #e9c8d9;border-radius:.45rem;color:#4c263c;background:white;resize:vertical;font:inherit}
+.study-reading .reading-result {margin:.55rem 0;color:#774319;line-height:1.6;overflow-wrap:anywhere}
+.study-reading .reading-result.is-match{color:#983d67}
+.study-reading .reading-status {font-size:.9rem;margin:.45rem 0 .6rem}
+.study-reading audio {display:block;max-width:100%;margin:.85rem 0 .1rem}
+@media(max-width:480px){.study-reading .reading-source{align-items:flex-start;flex-direction:column}.study-reading .reading-source .btn{padding:.4rem .55rem}.study-reading .reading-lines{padding-left:1.2rem}}

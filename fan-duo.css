@@ -1,0 +1,11 @@
+.nb-welcome.nb-fan-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,42%);align-items:center;gap:.55rem 1.25rem;background:linear-gradient(110deg,#fffdfd 2%,#fff8fc 66%,#fceaf3);overflow:hidden}
+.nb-fan-copy{min-width:0;padding:.35rem 0}
+.nb-fan-drawing{margin:0;min-width:0;display:grid;justify-items:center;align-self:center}
+.nb-fan-drawing .nb-fan-portrait{width:100%;height:auto;display:block;max-width:340px}
+.nb-fan-drawing figcaption{display:grid;grid-template-columns:1fr 1fr;width:min(100%,340px);text-align:center;color:#714354;font-size:.75rem;font-weight:700;letter-spacing:.03em}
+.nb-fan-drawing figcaption span:last-child{color:#465c7b}
+@media(max-width:600px){.nb-welcome.nb-fan-card{grid-template-columns:minmax(0,1fr);gap:.6rem}.nb-fan-drawing{justify-self:start;width:min(100%,240px);margin-left:-.3rem}.nb-fan-drawing figcaption{font-size:.7rem}}
+@media(prefers-reduced-motion:no-preference){.nb-fan-card:focus-within .nb-fan-drawing{filter:drop-shadow(0 2px 4px #a8496b15)}}
+/* Encouragement sticker */
+.nb-fan-cheer{position:relative;z-index:0;display:inline-flex;align-items:center;justify-content:center;margin:.1rem 0 .45rem;padding:.3rem .85rem .32rem;color:#8b365a;background:#fffdfa;border:1px solid #dba0b7;border-radius:999px;font-weight:800;font-size:clamp(.78rem,1.6vw,.98rem);letter-spacing:.06em;line-height:1.25;box-shadow:0 2px 0 #efccd9}
+.nb-fan-cheer::after{content:"";position:absolute;z-index:-1;left:calc(50% - 4px);bottom:-5px;width:7px;height:7px;transform:rotate(45deg);background:#fffdfa;border-right:1px solid #dba0b7;border-bottom:1px solid #dba0b7;border-bottom-right-radius:2px}
