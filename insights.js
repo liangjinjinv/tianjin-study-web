@@ -164,23 +164,12 @@
 
   function resources(ctx) {
     const e = ctx.esc;
-    const saved = ctx.state.resources || [];
-    return '<div class="tji-page"><div class="hero tji-hero"><p class="eyebrow">来源与笔记</p><h1>资料库</h1><p>查官方资料，收藏自己的复习要点。不同来源分开标记。</p></div>'+
-      '<div class="tji-split"><section class="panel"><h2>官方资料入口</h2><ul class="tji-list tji-resource-links">'+official.map(r=>
+    return '<div class="tji-page"><header class="hero tji-hero si-hero"><div><p class="eyebrow">按科目收纳 · 不上传</p><h1>全科资料库</h1><p>知识点、练习题、错题，都从这里添加。选好科目，保存后自动归档。</p></div>'+
+      window.StudyIntake.button(ctx)+'</header>'+window.StudyIntake.archive(ctx)+
+      '<details class="panel si-sources"><summary>查看官方资料与来源说明</summary><div class="tji-split"><section><h2>官方资料入口</h2><ul class="tji-list tji-resource-links">'+official.map(r=>
         '<li><div><a href="'+e(r.url)+'" target="_blank" rel="noopener noreferrer">'+e(r.text)+'</a><small class="muted">'+e(r.description)+'</small></div></li>').join('')+
-      '</ul></section><section class="panel"><h2>怎么看来源标签</h2><dl class="tji-definition"><dt>自编练习</dt><dd>用于熟悉概念和答题方法，不是真题，也不是官方评分口径。</dd>'+
-      '<dt>官方链接</dt><dd>仅提供查阅入口，不搬运受保护的教材、试卷或音频。</dd><dt>我的私有资料</dt><dd>自己保存的题目、答案或笔记。不会进入公共题库，也不会同步到其他设备。</dd></dl>'+
-      actionButton(ctx,'录入我的题目','upload')+'</section></div>'+
-      '<section class="panel"><h2>我的复习笔记</h2><p class="muted">只保存在这个浏览器。不要填姓名、学校或考号等个人信息。</p>'+
-      '<form class="tji-form tji-notes-form" data-tji-note><label>学科<select name="subject" required>'+selectSubjects(ctx,'选择学科')+'</select></label>'+
-      '<label>标题<input name="title" required maxlength="60" placeholder="例如：等高线的两个易错点"></label>'+
-      '<label class="tji-wide">要点<textarea name="body" maxlength="2500" rows="3" required placeholder="用自己的话记下方法或需要复习的地方"></textarea></label>'+
-      '<button class="btn primary" type="submit">保存笔记</button><span class="tji-form-status" role="status" aria-live="polite"></span></form>'+
-      '<label class="tji-search">搜索我的笔记<input type="search" data-tji-search placeholder="搜标题、学科或内容"></label>'+
-      '<p class="tji-empty" data-tji-no-notes '+(saved.length?'hidden':'')+'>'+(saved.length?'没有匹配的笔记。':'还没有笔记。')+'</p>'+
-      '<div class="tji-notes">'+[...saved].reverse().map(n=>
-        '<details data-tji-note-item><summary><b>'+e(n.title)+'</b> <span class="muted">'+e(n.subject)+' · '+e(n.date)+'</span></summary><p>'+e(n.body)+'</p></details>').join('')+
-      '</div></section></div>';
+      '</ul></section><section><h2>怎么看来源标签</h2><dl class="tji-definition"><dt>自编练习</dt><dd>用于熟悉概念和答题方法，不是真题，也不是官方评分口径。</dd>'+
+      '<dt>官方链接</dt><dd>仅提供查阅入口，不搬运受保护的教材、试卷或音频。</dd><dt>我的私有资料</dt><dd>照片和学习记录不会进入公共题库，也不会同步到其他设备。请避免拍入姓名、学号等个人信息。</dd></dl></section></div></details></div>';
   }
 
   window.renderInsights = ctx => ({
@@ -233,23 +222,6 @@
       }
       if (!dateString(data.date) || !Number.isFinite(+toDate(data.date)) || toDate(data.date).toISOString().slice(0,10)!==data.date || data.date>calendarDay(ctx)) return '请选择有效的测评日期。';
       return {key:'scores',record:{subject:data.subject,earned,max,date:data.date,title,created:Date.now()}};
-    });
-    bindForm('[data-tji-note]',data=>{
-      const title=data.title.trim(),body=data.body.trim();
-      if (!title||!body) return '请填写标题和笔记内容。';
-      return {key:'resources',record:{subject:data.subject,title,body,date:calendarDay(ctx)}};
-    });
-    const search=root.querySelector('[data-tji-search]');
-    if (search) search.addEventListener('input', ()=>{
-      const terms=search.value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-      let matches=0;
-      root.querySelectorAll('[data-tji-note-item]').forEach(item=>{
-        const text=item.textContent.toLocaleLowerCase();
-        item.hidden=!terms.every(s=>text.includes(s)); if (!item.hidden) matches++;
-      });
-      const empty=root.querySelector('[data-tji-no-notes]');
-      empty.hidden=matches>0;
-      empty.textContent=(state.resources||[]).length?'没有匹配的笔记。':'还没有笔记。';
     });
   };
 })();
