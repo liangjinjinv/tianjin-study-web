@@ -86,12 +86,21 @@
   async function addRecallToReview(c,q,{reason='默写未掌握',original=q?.response||'未完整默写'}={}) {
     if(writing || !q?.id || !dept(c).includes(q.subject)) return false;
     const map=(c.state.review ||= {});
-    if(Object.hasOwn(map,q.id)) return true;
+    const existing=Object.hasOwn(map,q.id)?map[q.id]:null;
+    const poem=q.subject==='语文' && q.id.startsWith('recall-poems-');
+    if(existing && !poem) return true;
+    if(existing && !existing.mastered) return {status:'scheduled',due:existing.due};
     writing=true;
     try {
-      map[q.id]={question:{...q,source:q.source==='knowledge'?'knowledge':'recall'},due:c.day(1),stage:0,reason,original,mastered:false};
-      if (!(await save(c))) { delete map[q.id]; return false; }
-      return true;
+      const due=c.day(1);
+      map[q.id]=existing
+        ? {...existing,due,stage:0,mastered:false}
+        : {question:{...q,source:q.source==='knowledge'?'knowledge':'recall'},due,stage:0,reason,original,mastered:false};
+      if (!(await save(c))) {
+        if(existing) map[q.id]=existing; else delete map[q.id];
+        return false;
+      }
+      return poem ? {status:existing?'resumed':'added',due} : true;
     } finally { writing=false; }
   }
   async function finish(c,q,ok,r,node) {

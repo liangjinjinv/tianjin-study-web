@@ -251,7 +251,7 @@
     let recallMode = false, compared = false;
     let active = true, recorder = null, stream = null, objectUrl = null, recordTimeout = null;
     let generation = 0;
-    let tried = new Set();
+    const tried = new Map();
     const translations = () => rows.forEach(row => {
       const tx = row.querySelector('.reading-translation');
       if (tx) tx.hidden = recallMode || !by('translate').checked;
@@ -372,7 +372,7 @@
         const add = row.querySelector('[data-add-miss]');
         add.hidden = exact;
         add.disabled = tried.has(i);
-        add.textContent = tried.has(i) ? '已加入复习' : '加入到期复习';
+        add.textContent = tried.get(i) ?? '加入到期复习';
       });
       by('compare').disabled = true;
       by('retry').hidden = false;
@@ -393,9 +393,12 @@
       };
       Promise.resolve().then(()=>ctx.addRecall(q)).then(result=>{
         if (result === false) throw new Error();
-        tried.add(i);
-        control.textContent = '已加入复习';
-        if(control.isConnected)by('feedback').textContent = '第 ' + (i+1) + ' 段已加入复习。';
+        const label = result?.status === 'resumed' ? '已重新加入复习'
+          : result?.status === 'scheduled' ? '已在复习计划中' : '已加入复习';
+        const next = result?.due ? '下次复习：' + result.due + '。' : '';
+        tried.set(i,label);
+        control.textContent = label;
+        if(control.isConnected)by('feedback').textContent = '第 ' + (i+1) + ' 段' + label + '。' + next;
       }).catch(()=>{
         control.disabled = false;
         if(control.isConnected)by('feedback').textContent = '暂时无法加入复习，可再试一次。';
